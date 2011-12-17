@@ -31,30 +31,29 @@ $dir_mess_lastuser_command = "last user";
 $dir_mess_stat_command = "list stat";
 $dir_mess_service_command = "list services";
 $dir_timeout = "timeout=";
-###################################################################################################################################################################  System interface, path required #################################################################################################################################################################################
+######  System interface #########
 $cpu_path = "/proc/stat";
 $mem_path = "/proc/meminfo";
 $uptime_path = "/proc/uptime";
 $avg_path = "/proc/loadavg";
 $network_sock_path = "/proc/net/sockstat"; 
 $network_dev_path = "/proc/net/dev"; 
-#######################################################################################################################################################   Обработчик ошибок системных переменных ###############################################
-########################################################################################################################
+#########  Twitter auth keys ########
 
 my $nt = Net::Twitter->new(legacy => 0);
 my $nt = Net::Twitter->new(
     traits   => [qw/OAuth API::REST/],
-    consumer_key        => 'yA9tS9SOIPbaJ732SnfZmg',
-    consumer_secret     => 'UpdpDbQgpbEpkMWzmNCSvmQ3JxxMJznb3XFZeYRps',
-    access_token        => '399375464-8t9LFVXsJszYvDhJbCzDzanBTXZX9u2lFVPbibE5',
-    access_token_secret => 'EopGF8pfznCGydsZGkzerta5w0wdgle7jdOuhpM',
+    consumer_key        => 'xxx',
+    consumer_secret     => 'xxx-xxx',
+    access_token        => 'yyy',
+    access_token_secret => 'yyy-yyy',
 );
 
 
 while(1)
 {
 $ttime = 0;
-######################################################################################################################################################   Direc message income  #######################################################################################################################################################################################################
+###########   Direct message functions ######### 
 while($ttime <= $time_const)
 {
 
