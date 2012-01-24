@@ -43,10 +43,10 @@ $network_dev_path = "/proc/net/dev";
 my $nt = Net::Twitter->new(legacy => 0);
 my $nt = Net::Twitter->new(
     traits   => [qw/OAuth API::REST/],
-    consumer_key        => 'xxx',
-    consumer_secret     => 'xxx-xxx',
-    access_token        => 'yyy',
-    access_token_secret => 'yyy-yyy',
+    consumer_key        => 'EfTt1XNeVB7Ph5eSZFYZg',
+    consumer_secret     => 'lkVCIXeqWSoJrKnqPYQ9fSmXjcHyoEbPPFvTUsKHZc',
+    access_token        => '399375464-N2FMhZsOo39vXPLnIJn3iecOOoqvpFdhhc2xeUmL',
+    access_token_secret => '4H1OFYx4FeUW6czzB04pRXsK1YgEvxsfGYnfMxSe4c',
 );
 
 
@@ -124,7 +124,7 @@ if($dir_mess_last_user eq "on")
     $temp_array = undef;
    }
   my $message = $last_str_out.$rand;
-  my $result = $nt->update($message);
+ eval { $nt->update($message) };
   @top = undef;
   $last_str_out = undef;
   $message = undef;
@@ -139,7 +139,7 @@ if($dir_mess_top_proc eq "on")
   for($j=0; $j<5; $j++) { $top_str = $top_str.$top[$j]."|"; }  
   $current_overral = $top_str.$rand;
   my $message = $current_overral;
-  my $result = $nt->update($message);  
+  eval { $nt->update($message) };  
   $top_str = undef;
   @top = ();
   undef $top;
@@ -174,7 +174,7 @@ if($dir_mess_stat eq "on")
   $current_overral = "SYS"."|".$hostname."|"."cpu:".$cpu."%"."|"."mem:".$mem_used."%"."|"."swp:".$swap_ok."%"."|"."avg:".$la1."|"."Up:".$uptime."d"."|"."Sock:".$net_connection."|"."BW:".$banwidth_transmit."GB"."|"."ApacheReq/sec:".$req_sec['0']."|"."NginxReq/sec:".$req_sec['1']."|"."usrOnline:".$online_usr."|"."visits:".$count_visit."|".$rand;
 
   my $message = $current_overral;
-  my $result = $nt->update($message);
+  eval { $nt->update($message) };
   $current_overral = undef;
   $message = undef;
   $result = undef;
@@ -198,7 +198,7 @@ if($dir_mess_service eq "on")
   $rand = int(rand(9999));
   $current_overral = $usr_from."|".$rand;
   my $message = $current_overral;
-  my $result = $nt->update($message);
+  eval { $nt->update($message) };
   $top_str = undef;
   $usr_from = undef;
   $serv_out = undef;
@@ -239,7 +239,7 @@ $rand = int(rand(9999));
 $current_overral = "SYS"."|".$hostname."|"."cpu:".$cpu."%"."|"."mem:".$mem_used."%"."|"."swp:".$swap_ok."%"."|"."avg:".$la1."|"."Up:".$uptime."d"."|"."Sock:".$net_connection."|"."BW:".$banwidth_transmit."GB"."|"."ApacheReq/sec:".$req_sec['0']."|"."NginxReq/sec:".$req_sec['1']."|"."usrOnline:".$online_usr."|"."visits:".$count_visit."|".$rand;
 print $current_overral;
 my $message = $current_overral;
-my $result = $nt->update($message);
+eval { $nt->update($message) };
 $current_overral = undef;
 $message = undef;
 $result = undef;
@@ -260,7 +260,7 @@ $rand = int(rand(9999));
 $current_overral = $usr_from.$rand;
 print $current_overral;
 my $message = $current_overral;
-my $result = $nt->update($message);
+eval { $nt->update($message) };
 $top_str = undef;
 $usr_from = undef;
 $serv_out = undef;
@@ -280,15 +280,19 @@ $result = undef;
 
 
 #if ( my $err = $@ ) {
-#    die $@ unless blessed $err && $err->isa('Net::Twitter::Error');
+#     $@ unless blessed $err && $err->isa('Net::Twitter::Error');
 #
 #    warn "HTTP Response Code: ", $err->code, "\n",
 #         "HTTP Message......: ", $err->message, "\n",
 #         "Twitter error.....: ", $err->error, "\n";
 #}
-if ( $@ ) {
-        warn "update failed because: $@\n";
-    }
+#if ( $@ ) {
+#        warn "update failed because: $@\n";
+#    }
+
+
+
+
 print "tweet created";
 sleep 1;
 
