@@ -2,9 +2,45 @@
 use User::Utmp;
 use Net::Twitter;
 use Scalar::Util 'blessed';
-use Net::XMPP;
+use IO::File;
+use File::Basename;
+use Cwd;
+use Sys::Syslog qw(:DEFAULT setlogsock);
+use POSIX qw(WNOHANG setsid);
+
+#####  New daemon mode code   #####################################
+use constant PIDFILE  => '/home/Twiilog.pid';
+use constant PIDPATH  => '/home';
+use constant USER     => 'nobody';
+use constant GROUP    => 'nogroup';
+use constant FACILITY =>  'daemon';
+use constant TWIILOG_HOME => '/home';
+my ($pid,$pidfile,$saved_dir,$CWD);
+#my $quit = 0;
+
+$SIG{TERM} = $SIG{INT} = \&do_term;
+$SIG{HUP} = \&do_hup;
+
+#my $fh = open_pid_file(PID_FILE);
 
 
+
+
+#log_die("cant fork: $!") unless defined (my $child = fork());
+#if($child == 0)
+#{
+#warn "$0 starting ...\n";
+#exit 0;
+#}
+
+defined(my $pid = fork) or die "Can't fork: $!";
+exit if $pid;
+log_notice("Server is up and ready to have fun...");
+my $pid = init_server(PIDFILE,USER,GROUP,$port);
+#open_pid_file(PIDFILE);
+#my $pid = become_daemon();
+#print $pid;
+#close $fh;
 ##########################################################################################################################
 ######################################  User interface ############# ##################################################
 #######################################################################################################################
@@ -43,15 +79,28 @@ $network_dev_path = "/proc/net/dev";
 my $nt = Net::Twitter->new(legacy => 0);
 my $nt = Net::Twitter->new(
     traits   => [qw/OAuth API::REST/],
-    consumer_key        => 'EfTt1XNeVB7Ph5eSZFYZg',
-    consumer_secret     => 'lkVCIXeqWSoJrKnqPYQ9fSmXjcHyoEbPPFvTUsKHZc',
-    access_token        => '399375464-N2FMhZsOo39vXPLnIJn3iecOOoqvpFdhhc2xeUmL',
-    access_token_secret => '4H1OFYx4FeUW6czzB04pRXsK1YgEvxsfGYnfMxSe4c',
+    consumer_key        => 'consumer_key',
+    consumer_secret     => 'consumer_secret key',
+    access_token        => 'access_token key',
+    access_token_secret => 'access_token_secret key',
 );
 
 
 while(1)
 {
+
+#next unless my $connection = $listen_socket->accept;
+#die "Cant fork: $!" unless defined (my $child = fork());
+
+#open(HH,">>logtwii") or die "cant open log file: $!";
+#print HH "twit created..\n";
+#close (HH) or die "cant close this file: $!";
+
+
+#if ($child = 0)
+#{
+#$listen_socket->close;
+#$nt->update("hels"); 
 $ttime = 0;
 ###########   Direct message functions ######### 
 while($ttime <= $time_const)
@@ -124,7 +173,9 @@ if($dir_mess_last_user eq "on")
     $temp_array = undef;
    }
   my $message = $last_str_out.$rand;
- eval { $nt->update($message) };
+ eval { 
+$nt->update($message); 
+};
   @top = undef;
   $last_str_out = undef;
   $message = undef;
@@ -139,7 +190,9 @@ if($dir_mess_top_proc eq "on")
   for($j=0; $j<5; $j++) { $top_str = $top_str.$top[$j]."|"; }  
   $current_overral = $top_str.$rand;
   my $message = $current_overral;
-  eval { $nt->update($message) };  
+  eval { 
+$nt->update($message); 
+};  
   $top_str = undef;
   @top = ();
   undef $top;
@@ -162,7 +215,7 @@ if($dir_mess_stat eq "on")
   $cpu = getCpu();
   $la1 = getLoadavg();
   $uptime = getUptime();
- # @top=getTopProc(5); 
+  @top=getTopProc(5); 
   
   @req_sec =  apache_nginx_req();
   
@@ -174,7 +227,9 @@ if($dir_mess_stat eq "on")
   $current_overral = "SYS"."|".$hostname."|"."cpu:".$cpu."%"."|"."mem:".$mem_used."%"."|"."swp:".$swap_ok."%"."|"."avg:".$la1."|"."Up:".$uptime."d"."|"."Sock:".$net_connection."|"."BW:".$banwidth_transmit."GB"."|"."ApacheReq/sec:".$req_sec['0']."|"."NginxReq/sec:".$req_sec['1']."|"."usrOnline:".$online_usr."|"."visits:".$count_visit."|".$rand;
 
   my $message = $current_overral;
-  eval { $nt->update($message) };
+  eval { 
+$nt->update($message); 
+};
   $current_overral = undef;
   $message = undef;
   $result = undef;
@@ -198,7 +253,9 @@ if($dir_mess_service eq "on")
   $rand = int(rand(9999));
   $current_overral = $usr_from."|".$rand;
   my $message = $current_overral;
-  eval { $nt->update($message) };
+  eval { 
+$nt->update($message); 
+};
   $top_str = undef;
   $usr_from = undef;
   $serv_out = undef;
@@ -226,41 +283,45 @@ $banwidth_transmit = sprintf("%.1f",($traff[0]/(1024*1024*1024)));
 
 $cpu = getCpu();
 $la1 = getLoadavg();
-$uptime = getUptime();
+#$uptime = getUptime();
 #@top=getTopProc(5); 
 
-@req_sec =  apache_nginx_req();
+#@req_sec =  apache_nginx_req();
 
-$online_usr = onlineUsr();
-$count_visit = countVisit();
+#$online_usr = onlineUsr();
+#$count_visit = countVisit();
 
 $rand = int(rand(9999));
 
 $current_overral = "SYS"."|".$hostname."|"."cpu:".$cpu."%"."|"."mem:".$mem_used."%"."|"."swp:".$swap_ok."%"."|"."avg:".$la1."|"."Up:".$uptime."d"."|"."Sock:".$net_connection."|"."BW:".$banwidth_transmit."GB"."|"."ApacheReq/sec:".$req_sec['0']."|"."NginxReq/sec:".$req_sec['1']."|"."usrOnline:".$online_usr."|"."visits:".$count_visit."|".$rand;
 print $current_overral;
 my $message = $current_overral;
-eval { $nt->update($message) };
+eval { 
+$nt->update($message); 
+};
 $current_overral = undef;
 $message = undef;
 $result = undef;
 ##############  Service function  ############
-@services = getserviceok();
-$etc_check = etcCheck();
-$www_check = wwwCheck();
-if($etc_check eq "") { $etc_check = "/etc nonmodify"; }
-else { $etc_check = "/etc MODIFY"; }
-if($www_check eq "") { $www_check = "/www nonmodify"; }
-else { $www_check = "/www MODIFY"; }
-$serv_out = "|SERVICE|"."apache:".$services['0']."|"."Nginx:".$services['1']."|"."Mysql:".$services['2'];
+#@services = getserviceok();
+#$etc_check = etcCheck();
+#$www_check = wwwCheck();
+#if($etc_check eq "") { $etc_check = "/etc nonmodify"; }
+#else { $etc_check = "/etc MODIFY"; }
+#if($www_check eq "") { $www_check = "/www nonmodify"; }
+#else { $www_check = "/www MODIFY"; }
+#$serv_out = "|SERVICE|"."apache:".$services['0']."|"."Nginx:".$services['1']."|"."Mysql:".$services['2'];
 @users=getUsers();
-$usr_from = $serv_out."|".$etc_check."|".$www_check."|";
+#$usr_from = $serv_out."|".$etc_check."|".$www_check."|";
 print "### Users login: ###\n";
 for($i=0; $i<=$#users; $i++) {  $usr_from = $usr_from.$users[$i]."|"; }
 $rand = int(rand(9999));
 $current_overral = $usr_from.$rand;
 print $current_overral;
 my $message = $current_overral;
-eval { $nt->update($message) };
+eval { 
+$nt->update($message);
+ };
 $top_str = undef;
 $usr_from = undef;
 $serv_out = undef;
@@ -292,11 +353,112 @@ $result = undef;
 
 
 
-
 print "tweet created";
 sleep 1;
+#exit 0;
+#}
+
+#$connection->close;
 
 }
+END { log_notice("Server exiting normally\n") if $$ == $pid; }
+
+sub init_server
+{
+my ($user, $group);
+ ($pidfile,$user,$group) = @_;
+ $pidfile ||= getpidfilename();
+my $fh = open_pid_file($pidfile);
+become_daemon();
+print $fh $$;
+close $fh;
+init_log();
+change_privileges($user,$group) if defined $user && defined $group;
+return $pid = $$;
+
+}
+
+
+sub become_daemon 
+{
+POSIX::setsid();    ## go to leader of season
+open(STDIN, "</dev/null");
+open(STDOUT, ">/dev/null");
+open(STDERR, "&STDOUT");
+	$CWD = getcwd();
+chdir '/home'; 
+umask(0);     ##  reset filemask
+$ENV{PATH} = '/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:/home';
+return $$;
+} 
+
+sub change_privileges
+{
+my ($user,$group) = @_;
+my $uid = getpwnam($user) or die "Cant get uid for $user\n";
+my $gid = getgrnam($group) or die "Cant get gid for $group\n";
+$) = "$gid $gid";
+$( = $gid;
+$> = $uid;
+}
+
+sub init_log
+{
+ setlogsock('unix');
+	my $basename = basename($0);
+	openlog($basename,'pid',FACILITY);
+	$SIG{__WARN__} = \&log_warn;
+	$SIG{__DIE__} = \&log_die;	
+}
+
+sub log_debug 
+{
+syslog('debug',_msg(@_));
+}
+
+sub log_notice
+{
+syslog('notice',_msg(@_));
+}
+
+sub log_warn
+{
+syslog('warning',_msg(@_));
+}
+sub log_die
+{
+syslog('crit',_msg(@_)) unless $^S;
+die @_;
+}
+sub _msg
+{
+	my $msg = join('',@_) || "Something's wrong";
+	my ($pack,$filename,$line) = caller(1);
+	$msg .= "at $filename line $line\n" unless $msg =~ /\n$/;
+	$msg;
+}
+sub getpidfilename
+{
+	my $basename = basename($0,'.pl');
+	return PIDPATH . "/$basename.pid";
+}
+
+sub open_pid_file
+{
+my $file = shift;
+if (-e $file)
+	{
+		my $fh = IO::File->new($file) || return;
+		my $pid = <$fh>;
+		die "Invalid PID file" unless $pid =~ /^(\d+)$/;
+		die "Server already running with PID $pid" if kill 0 => $pid;
+		warn "Removing PID file for defunct server process $pid.\n";
+		die "Cant unlink PID file $file" unless -w $file && unlink $file;
+	}
+return IO::File->new($file,O_WRONLY|O_CREAT|O_EXCL,0644) or die "Cant create $file: $!\n";
+}
+
+
 
 sub etcCheck
 {
